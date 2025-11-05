@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Share2, Heart, Calendar, Users, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getCampaignById } from "@/lib/actions/campaigns"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function CampaignDetailPage({
   params,
@@ -16,49 +18,84 @@ export default async function CampaignDetailPage({
 }) {
   const { id } = await params
 
-  // TODO: Fetch campaign from database
-  const campaign = {
-    id,
-    title: "Помощь в строительстве колодцев в сельских районах",
-    description: "Обеспечение доступа к чистой воде для нуждающихся сообществ в сельских регионах",
-    story:
-      "Доступ к чистой воде — это фундаментальное право человека, однако миллионы людей в сельских районах до сих пор не имеют этой базовой необходимости. Эта кампания направлена на строительство устойчивых колодцев в отдалённых деревнях, обеспечивая чистой питьевой водой семьи, которые в настоящее время проходят мили каждый день, чтобы набрать воду из небезопасных источников.\n\nВаше пожертвование будет напрямую финансировать строительство глубоких колодцев, оснащённых ручными насосами, обеспечивая долгосрочный доступ к чистой воде. Каждый колодец обслуживает примерно 500 человек и включает обучение местных сообществ по обслуживанию.\n\nВместе мы можем оказать долгосрочное влияние на здоровье и благополучие этих сообществ.",
-    goalAmount: 1500000,
-    currentAmount: 934000,
-    category: "вода",
-    imageUrl: "/water-well-construction.jpg",
-    donorCount: 245,
-    daysLeft: 12,
-    deadline: "2025-01-20",
-    creatorName: "Ахмед Хасан",
-    creatorAvatar: "/abstract-profile.png",
-    createdAt: "2024-12-15",
-    updates: [
-      {
-        id: "1",
-        title: "Первый колодец завершён!",
-        content:
-          "Мы рады сообщить, что первый колодец был успешно завершён и теперь обеспечивает чистой водой 500 человек в деревне Аль-Нур. Спасибо за вашу поддержку!",
-        imageUrl: "/completed-water-well.jpg",
-        createdAt: "2025-01-05",
-      },
-      {
-        id: "2",
-        title: "Обновление хода строительства",
-        content:
-          "Работа над вторым колодцем идёт хорошо. Буровая бригада достигла глубины 80 метров, и мы ожидаем достичь водоносного слоя в ближайшие дни.",
-        createdAt: "2025-01-02",
-      },
-    ],
-    recentDonors: [
-      { name: "Сара М.", amount: 7500, isAnonymous: false, createdAt: "2 часа назад" },
-      { name: "Аноним", amount: 18750, isAnonymous: true, createdAt: "5 часов назад" },
-      { name: "Мухаммед К.", amount: 3750, isAnonymous: false, createdAt: "1 день назад" },
-    ],
+  // Fetch campaign from database
+  const result = await getCampaignById(id)
+  
+  if (result.error || !result.campaign) {
+    notFound()
   }
 
-  if (!campaign) {
-    notFound()
+  const campaignData = result.campaign
+
+  // Fetch recent donations for this campaign
+  const supabase = await createClient()
+  const { data: donations } = await supabase
+    .from("donations")
+    .select(`
+      *,
+      profiles:donor_id (display_name, avatar_url)
+    `)
+    .eq("campaign_id", id)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false })
+    .limit(10)
+
+  // Transform database format to component format
+  const deadline = campaignData.deadline ? new Date(campaignData.deadline) : null
+  const now = new Date()
+  const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null
+
+  // Format recent donors from donations
+  const formatRelativeTime = (date: Date) => {
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 60) return `${diffMins} минут назад`
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
+    return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
+  }
+
+  const recentDonors = (donations || []).map((donation: any) => ({
+    name: donation.is_anonymous
+      ? "Аноним"
+      : donation.profiles?.display_name || "Неизвестный донор",
+    amount: Number(donation.amount || 0),
+    isAnonymous: donation.is_anonymous || false,
+    createdAt: formatRelativeTime(new Date(donation.created_at)),
+  }))
+
+  // Format campaign updates
+  const updates = ((campaignData.campaign_updates as any[]) || []).map((update: any) => ({
+    id: update.id,
+    title: update.title,
+    content: update.content,
+    imageUrl: update.image_url || null,
+    createdAt: new Date(update.created_at).toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
+  }))
+
+  const campaign = {
+    id: campaignData.id,
+    title: campaignData.title || "",
+    description: campaignData.description || "",
+    story: campaignData.story || "",
+    goalAmount: Number(campaignData.goal_amount || 0),
+    currentAmount: Number(campaignData.current_amount || 0),
+    category: campaignData.category || "other",
+    imageUrl: campaignData.image_url || "/placeholder.svg",
+    donorCount: Number(campaignData.donor_count || 0),
+    daysLeft: daysLeft ?? 0,
+    deadline: deadline?.toISOString().split("T")[0] || null,
+    creatorName: (campaignData.profiles as any)?.display_name || "Неизвестный автор",
+    creatorAvatar: (campaignData.profiles as any)?.avatar_url || "/placeholder.svg",
+    createdAt: new Date(campaignData.created_at).toLocaleDateString("ru-RU"),
+    updates,
+    recentDonors,
   }
 
   const progress = (campaign.currentAmount / campaign.goalAmount) * 100

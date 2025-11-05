@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CheckCircle, Heart, ExternalLink, Mail, Users, TrendingUp, Globe } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getFundById } from "@/lib/actions/funds"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function FundDetailPage({
   params,
@@ -16,62 +18,74 @@ export default async function FundDetailPage({
 }) {
   const { id } = await params
 
-  // TODO: Fetch fund from database
-  const fund = {
-    id,
-    name: "Islamic Relief",
-    nameAr: "الإغاثة الإسلامية",
-    description: "Предоставление гуманитарной помощи по всему миру",
-    descriptionAr: "تقديم المساعدات الإنسانية في جميع أنحاء العالم",
-    fullDescription:
-      "Islamic Relief — ведущая международная гуманитарная организация, посвящённая борьбе с бедностью и страданиями по всему миру. Более 30 лет мы работаем в более чем 40 странах, предоставляя экстренную помощь, программы устойчивого развития и защиту прав наиболее уязвимых сообществ.\n\nНаша работа охватывает множество секторов, включая образование, здравоохранение, водоснабжение и санитарию, поддержку средств к существованию и экстренное реагирование. Мы верим в расширение возможностей сообществ для построения устойчивого будущего, сохраняя достоинство и уважение ко всем.",
-    category: "general",
-    logoUrl: "/placeholder.svg?key=relief-logo",
-    isVerified: true,
-    totalRaised: 1250000,
-    donorCount: 5420,
-    websiteUrl: "https://islamic-relief.org",
-    contactEmail: "info@islamic-relief.org",
-    impactStats: [
-      { label: "Людей помогли", value: "50,000+" },
-      { label: "Стран", value: "40+" },
-      { label: "Проектов", value: "200+" },
-      { label: "Лет работы", value: "30+" },
-    ],
-    recentDonations: [
-      { name: "Ахмед К.", amount: 500, createdAt: "2 часа назад" },
-      { name: "Анонимно", amount: 1000, createdAt: "5 часов назад" },
-      { name: "Фатима М.", amount: 250, createdAt: "1 день назад" },
-      { name: "Омар С.", amount: 100, createdAt: "1 день назад" },
-      { name: "Сара А.", amount: 750, createdAt: "2 дня назад" },
-    ],
-    projects: [
-      {
-        id: "1",
-        title: "Экстренная раздача продуктов",
-        description: "Предоставление продуктовых наборов семьям, пострадавшим от стихийных бедствий",
-        imageUrl: "/placeholder.svg?key=food",
-        beneficiaries: 5000,
-      },
-      {
-        id: "2",
-        title: "Инициатива чистой воды",
-        description: "Строительство колодцев и систем фильтрации воды в сельских общинах",
-        imageUrl: "/placeholder.svg?key=water-init",
-        beneficiaries: 10000,
-      },
-      {
-        id: "3",
-        title: "Программа поддержки образования",
-        description: "Предоставление школьных принадлежностей и стипендий детям из малообеспеченных семей",
-        imageUrl: "/placeholder.svg?key=edu-support",
-        beneficiaries: 3000,
-      },
-    ],
+  // Fetch fund from database
+  const result = await getFundById(id)
+  
+  if (result.error || !result.fund) {
+    notFound()
   }
 
-  if (!fund) {
-    notFound()
+  const fundData = result.fund
+
+  // Fetch recent donations for this fund
+  const supabase = await createClient()
+  const { data: donations } = await supabase
+    .from("donations")
+    .select(`
+      *,
+      profiles:donor_id (display_name, avatar_url)
+    `)
+    .eq("fund_id", id)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false })
+    .limit(10)
+
+  // Format recent donors from donations
+  const now = new Date()
+  const formatRelativeTime = (date: Date) => {
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 60) return `${diffMins} минут назад`
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "час" : diffHours < 5 ? "часа" : "часов"} назад`
+    return `${diffDays} ${diffDays === 1 ? "день" : diffDays < 5 ? "дня" : "дней"} назад`
+  }
+
+  const recentDonations = (donations || []).map((donation: any) => ({
+    name: donation.is_anonymous
+      ? "Анонимно"
+      : donation.profiles?.display_name || "Неизвестный донор",
+    amount: Number(donation.amount || 0),
+    createdAt: formatRelativeTime(new Date(donation.created_at)),
+  }))
+
+  // Transform database format to component format
+  // Note: impactStats and projects are optional fields that may not exist in DB
+  // For now, we'll use empty arrays or default values
+  const fund = {
+    id: fundData.id,
+    name: fundData.name || "",
+    nameAr: fundData.name_ar || "",
+    description: fundData.description || "",
+    descriptionAr: fundData.description_ar || "",
+    fullDescription: fundData.description || "", // Use description as fullDescription if separate field doesn't exist
+    category: fundData.category || "general",
+    logoUrl: fundData.logo_url || "/placeholder.svg",
+    isVerified: fundData.is_verified !== undefined ? fundData.is_verified : false,
+    totalRaised: Number(fundData.total_raised || 0),
+    donorCount: Number(fundData.donor_count || 0),
+    websiteUrl: fundData.website_url || null,
+    contactEmail: fundData.contact_email || null,
+    impactStats: [
+      { label: "Людей помогли", value: "—" },
+      { label: "Стран", value: "—" },
+      { label: "Проектов", value: "—" },
+      { label: "Лет работы", value: "—" },
+    ], // Default stats - can be enhanced later
+    recentDonations,
+    projects: [], // Projects can be added as separate table or JSON field later
   }
 
   return (
