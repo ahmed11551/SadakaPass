@@ -56,9 +56,12 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="w-full bg-primary hover:bg-primary/90">
-          <Heart className="mr-2 h-4 w-4" />
-          Пожертвовать {amount.toLocaleString("ru-RU")} ₽
+        <Button 
+          size="lg" 
+          className="w-full h-14 bg-primary hover:bg-primary/90 text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          <Heart className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{amount.toLocaleString("ru-RU")} ₽</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

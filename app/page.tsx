@@ -304,15 +304,27 @@ export default function HomePage() {
             </CardHeader>
             <CardContent className="space-y-4 relative">
               <Tabs defaultValue="project" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="project">Развитие проекта</TabsTrigger>
-                  <TabsTrigger value="target">Целевое пожертвование</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 h-auto p-1 gap-1">
+                  <TabsTrigger 
+                    value="project" 
+                    className="flex-1 text-xs sm:text-sm px-2 py-2.5 whitespace-nowrap"
+                  >
+                    Развитие проекта
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="target" 
+                    className="flex-1 text-xs sm:text-sm px-2 py-2.5 whitespace-nowrap"
+                  >
+                    Целевое пожертвование
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="project" className="space-y-4 mt-3">
                   <div className="grid grid-cols-3 gap-2">
                     {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <QuickDonation key={amount} amount={amount} category="general" />
+                      <div key={amount} className="min-w-0">
+                        <QuickDonation amount={amount} category="general" />
+                      </div>
                     ))}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -347,7 +359,9 @@ export default function HomePage() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <QuickDonation key={amount} amount={amount} category="sadaqah" />
+                      <div key={amount} className="min-w-0">
+                        <QuickDonation amount={amount} category="sadaqah" />
+                      </div>
                     ))}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
