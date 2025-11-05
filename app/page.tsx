@@ -4,7 +4,6 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, Calculator, Sparkles, HandHeart, Users, ChevronLeft, ChevronRight, Target } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
@@ -288,95 +287,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Quick Donation Section (under quick actions) */}
-        <section className="space-y-4">
-          <Card className="bg-gradient-to-br from-primary/5 via-accent/5 to-primary/10 border-2 border-primary/20 shadow-lg shadow-primary/5 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-            <CardHeader className="relative">
-              <div className="flex items-center gap-2">
-                <HandHeart className="h-5 w-5 text-primary" />
-                <CardTitle className="text-primary">Быстрое пожертвование</CardTitle>
-              </div>
-              <CardDescription>
-                Быстро поддержите развитие проекта или перейдите к целевому пожертвованию
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 relative">
-              <Tabs defaultValue="project" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-auto p-1 gap-1">
-                  <TabsTrigger 
-                    value="project" 
-                    className="flex-1 text-xs sm:text-sm px-2 py-2.5 whitespace-nowrap"
-                  >
-                    Развитие проекта
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="target" 
-                    className="flex-1 text-xs sm:text-sm px-2 py-2.5 whitespace-nowrap"
-                  >
-                    Целевое пожертвование
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="project" className="space-y-4 mt-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <div key={amount} className="min-w-0">
-                        <QuickDonation amount={amount} category="general" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Button
-                      className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                      size="lg"
-                      asChild
-                    >
-                      <Link href="/donate?type=project">Подробная форма</Link>
-                    </Button>
-                    <Button variant="outline" className="w-full h-12 text-base" size="lg" asChild>
-                      <Link href="/funds">Выбрать фонд</Link>
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="target" className="space-y-4 mt-3">
-                  {/* Quick category presets for target donations */}
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {[
-                      { name: "Садака", key: "general" },
-                      { name: "Закят", key: "zakat" },
-                      { name: "Образование", key: "education" },
-                      { name: "Медицина", key: "healthcare" },
-                      { name: "Вода", key: "water" },
-                      { name: "Срочная помощь", key: "emergency" },
-                    ].map((c) => (
-                      <Button key={c.key} variant="outline" size="sm" asChild>
-                        <Link href={`/funds?category=${c.key}`}>{c.name}</Link>
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <div key={amount} className="min-w-0">
-                        <QuickDonation amount={amount} category="sadaqah" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <Button className="w-full h-12 text-base" variant="outline" size="lg" asChild>
-                      <Link href="/funds">Выбрать фонд</Link>
-                    </Button>
-                    <Button className="w-full h-12 text-base" variant="outline" size="lg" asChild>
-                      <Link href="/campaigns">Выбрать кампанию</Link>
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </section>
 
         {/* Active Campaigns Section */}
         <section className="space-y-4">
