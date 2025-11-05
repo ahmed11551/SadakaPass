@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, Calculator, Sparkles, HandHeart, Users, ChevronLeft, ChevronRight, Target } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
+import { QuickDonation } from "@/components/quick-donation"
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -261,11 +262,11 @@ export default function HomePage() {
                           <span>Цель: {campaign.goal.toLocaleString("ru-RU")} ₽</span>
                         </div>
                       </div>
-                      <Button className="w-full bg-red-500 hover:bg-red-600" asChild>
-                        <Link href={`/donate?type=target&category=${campaign.category}&campaignId=${campaign.id}`}>
-                          Помочь сейчас
-                        </Link>
-                      </Button>
+                      <QuickDonation
+                        amount={500}
+                        campaignId={campaign.id.toString()}
+                        category={campaign.category}
+                      />
                     </CardContent>
                   </Card>
                 </div>
@@ -311,14 +312,7 @@ export default function HomePage() {
                 <TabsContent value="project" className="space-y-4 mt-3">
                   <div className="grid grid-cols-3 gap-2">
                     {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <Button
-                        key={amount}
-                        variant="outline"
-                        className="h-14 font-bold text-base bg-card/80 hover:bg-primary/10 hover:border-primary/40 hover:scale-105 transition-all duration-200 shadow-sm"
-                        asChild
-                      >
-                        <Link href={`/donate?type=project&amount=${amount}`}>{amount} ₽</Link>
-                      </Button>
+                      <QuickDonation key={amount} amount={amount} category="general" />
                     ))}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -327,7 +321,7 @@ export default function HomePage() {
                       size="lg"
                       asChild
                     >
-                      <Link href="/donate?type=project">Поддержать развитие проекта</Link>
+                      <Link href="/donate?type=project">Подробная форма</Link>
                     </Button>
                     <Button variant="outline" className="w-full h-12 text-base" size="lg" asChild>
                       <Link href="/funds">Выбрать фонд</Link>
@@ -353,14 +347,7 @@ export default function HomePage() {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {[100, 250, 500, 1000, 2500, 5000].map((amount) => (
-                      <Button
-                        key={amount}
-                        variant="outline"
-                        className="h-14 font-bold text-base bg-card/80 hover:bg-primary/10 hover:border-primary/40 hover:scale-105 transition-all duration-200 shadow-sm"
-                        asChild
-                      >
-                        <Link href={`/donate?type=target&amount=${amount}`}>{amount} ₽</Link>
-                      </Button>
+                      <QuickDonation key={amount} amount={amount} category="sadaqah" />
                     ))}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
