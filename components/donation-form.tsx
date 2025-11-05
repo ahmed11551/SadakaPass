@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,13 +14,14 @@ import { Heart, Repeat } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
 import { createDonation } from "@/lib/actions/donations"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 const PRESET_AMOUNTS = [100, 500, 1000, 2500, 5000, 10000]
 const CURRENCIES = ["RUB", "USD", "EUR"]
 
 export function DonationForm() {
   const router = useRouter()
+  const search = useSearchParams()
   const [donationType, setDonationType] = useState<"one_time" | "recurring">("one_time")
   const [amount, setAmount] = useState<number | null>(null)
   const [customAmount, setCustomAmount] = useState("")
@@ -28,10 +29,37 @@ export function DonationForm() {
   const [frequency, setFrequency] = useState("monthly")
   const [category, setCategory] = useState("sadaqah")
   const [fundId, setFundId] = useState<string>("")
+  const [campaignId, setCampaignId] = useState<string>("")
   const [message, setMessage] = useState("")
   const [isAnonymous, setIsAnonymous] = useState(false)
 
   const selectedAmount = customAmount ? Number.parseFloat(customAmount) : amount
+
+  // Prefill from query params
+  useEffect(() => {
+    const typeParam = search.get("type") // project | target
+    const amountParam = search.get("amount")
+    const categoryParam = search.get("category")
+    const fundParam = search.get("fundId")
+    const campaignParam = search.get("campaignId")
+
+    if (amountParam) {
+      const val = Number(amountParam)
+      if (!Number.isNaN(val) && val > 0) setAmount(val)
+    }
+    if (categoryParam) setCategory(categoryParam)
+    if (fundParam) setFundId(fundParam)
+    if (campaignParam) setCampaignId(campaignParam)
+
+    // Map project/target to sensible defaults
+    if (typeParam === "project") {
+      setCategory("general")
+    } else if (typeParam === "target") {
+      // keep provided category if any, else default to sadaqah
+      setCategory((prev) => prev || "sadaqah")
+    }
+    // Keep donationType UI default (one_time)
+  }, [search])
 
   const handlePaymentSuccess = async () => {
     if (!selectedAmount) return
@@ -44,6 +72,7 @@ export function DonationForm() {
       frequency: donationType === "recurring" ? (frequency as any) : undefined,
       category: category as any,
       fundId: fundId || undefined,
+        campaignId: campaignId || undefined,
       message: message || undefined,
       isAnonymous,
     })

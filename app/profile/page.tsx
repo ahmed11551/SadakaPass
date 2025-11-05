@@ -14,7 +14,7 @@ export default function ProfilePage() {
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Профиль пользователя */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+        <Card className="border border-primary/15 bg-gradient-to-br from-primary/5 to-accent/5 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -28,18 +28,18 @@ export default function ProfilePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-lg bg-card border">
-                <div className="text-2xl font-bold text-primary">24</div>
-                <div className="text-xs text-muted-foreground">Пожертвований</div>
+            <div className="grid grid-cols-3 gap-3 max-w-xl">
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/15 bg-card/90 p-4 shadow-sm">
+                <div className="text-3xl font-extrabold text-primary tracking-tight">24</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Пожертвований</div>
               </div>
-              <div className="text-center p-3 rounded-lg bg-card border">
-                <div className="text-2xl font-bold text-accent">45 600 ₽</div>
-                <div className="text-xs text-muted-foreground">Всего отдано</div>
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-accent/20 bg-card/90 p-4 shadow-sm">
+                <div className="text-3xl font-extrabold text-accent tracking-tight">45 600 ₽</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Всего отдано</div>
               </div>
-              <div className="text-center p-3 rounded-lg bg-card border">
-                <div className="text-2xl font-bold text-primary">8</div>
-                <div className="text-xs text-muted-foreground">Кампаний</div>
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-primary/15 bg-card/90 p-4 shadow-sm">
+                <div className="text-3xl font-extrabold text-primary tracking-tight">8</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Кампаний</div>
               </div>
             </div>
           </CardContent>

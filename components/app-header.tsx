@@ -1,13 +1,29 @@
 "use client"
 
-import { Bell, Sparkles } from "lucide-react"
+import { Bell, ChevronLeft, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { usePathname, useRouter } from "next/navigation"
 
 export function AppHeader() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const canGoBack = typeof window !== "undefined" && window.history.length > 1 && pathname !== "/"
+
   return (
     <header className="sticky top-0 z-40 w-full border-b-2 border-primary/20 bg-card/98 backdrop-blur-xl supports-[backdrop-filter]:bg-card/95 shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 max-w-lg mx-auto">
         <div className="flex items-center gap-2">
+          {canGoBack ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-1 hover:bg-primary/10"
+              onClick={() => router.back()}
+              aria-label="Назад"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          ) : null}
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/30 ring-2 ring-primary/20">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
