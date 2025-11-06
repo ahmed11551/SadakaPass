@@ -36,3 +36,5 @@ setup-supabase.ps1
 test-bot.ps1
 add-github-secrets.ps1
 add-secrets.ps1
+
+.vercel

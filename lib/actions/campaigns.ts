@@ -12,6 +12,7 @@ export type CampaignInput = {
   category: "medical" | "education" | "emergency" | "family" | "community" | "other"
   imageUrl?: string
   deadline?: Date
+  fundId?: string
 }
 
 export async function createCampaign(input: CampaignInput) {
@@ -39,6 +40,7 @@ export async function createCampaign(input: CampaignInput) {
         category: input.category,
         image_url: input.imageUrl || null,
         deadline: input.deadline || null,
+        fund_id: input.fundId || null,
         status: "pending", // Requires approval
       })
       .select()

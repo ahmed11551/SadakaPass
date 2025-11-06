@@ -15,6 +15,9 @@ import { CalendarIcon, Upload, X } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { createCampaign } from "@/lib/actions/campaigns"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 const CATEGORIES = [
   { value: "medical", label: "Медицина" },
@@ -28,6 +31,7 @@ const CATEGORIES = [
 const CURRENCIES = ["RUB", "USD", "EUR"]
 
 export function CampaignCreationForm() {
+  const router = useRouter()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [story, setStory] = useState("")
@@ -39,6 +43,7 @@ export function CampaignCreationForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFundId, setSelectedFundId] = useState<string>("")
   const [funds, setFunds] = useState<any[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Fetch funds on component mount
   useEffect(() => {
@@ -69,35 +74,62 @@ export function CampaignCreationForm() {
     }
   }
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!title.trim()) {
+      newErrors.title = "Название кампании обязательно"
+    }
+    if (!description.trim()) {
+      newErrors.description = "Описание обязательно"
+    }
+    if (!story.trim()) {
+      newErrors.story = "История кампании обязательна"
+    }
+    if (!goalAmount || Number.parseFloat(goalAmount) <= 0) {
+      newErrors.goalAmount = "Укажите корректную сумму цели"
+    }
+    if (!category) {
+      newErrors.category = "Выберите категорию"
+    }
+    if (!selectedFundId) {
+      newErrors.fundId = "Выберите фонд-партнёр"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!title || !description || !story || !goalAmount || !category || !selectedFundId) {
-      alert("Пожалуйста, заполните все обязательные поля, включая выбор фонда-партнёра")
+    if (!validateForm()) {
+      toast.error("Пожалуйста, заполните все обязательные поля")
       return
     }
 
     setIsLoading(true)
 
     try {
-      // TODO: Implement campaign creation with server action
-      console.log("[v0] Campaign data:", {
-        title,
-        description,
-        story,
+      const result = await createCampaign({
+        title: title.trim(),
+        description: description.trim(),
+        story: story.trim(),
         goalAmount: Number.parseFloat(goalAmount),
         currency,
-        category,
-        deadline,
-        imagePreview,
+        category: category as any,
+        deadline: deadline || undefined,
+        imageUrl: imagePreview || undefined,
         fundId: selectedFundId || undefined,
       })
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
 
-      alert("Кампания успешно создана! Она будет проверена перед публикацией.")
-
+      toast.success("Кампания успешно создана! Она будет проверена перед публикацией.")
+      
       // Reset form
       setTitle("")
       setDescription("")
@@ -107,9 +139,15 @@ export function CampaignCreationForm() {
       setDeadline(undefined)
       setImagePreview(null)
       setSelectedFundId("")
+      setErrors({})
+
+      // Redirect to campaigns page after a short delay
+      setTimeout(() => {
+        router.push("/campaigns")
+      }, 1500)
     } catch (error) {
-      console.error("[v0] Campaign creation error:", error)
-      alert("Не удалось создать кампанию. Пожалуйста, попробуйте снова.")
+      console.error("Campaign creation error:", error)
+      toast.error("Не удалось создать кампанию. Пожалуйста, попробуйте снова.")
     } finally {
       setIsLoading(false)
     }
@@ -130,10 +168,15 @@ export function CampaignCreationForm() {
               id="title"
               placeholder="Например: Помощь в строительстве школы в сельской местности"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (errors.title) setErrors({ ...errors, title: "" })
+              }}
               maxLength={100}
               required
+              className={errors.title ? "border-destructive" : ""}
             />
+            {errors.title && <p className="text-xs text-destructive">{errors.title}</p>}
             <p className="text-xs text-muted-foreground">{title.length}/100</p>
           </div>
 
@@ -143,18 +186,30 @@ export function CampaignCreationForm() {
               id="description"
               placeholder="Краткое резюме вашей кампании (1-2 предложения)"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value)
+                if (errors.description) setErrors({ ...errors, description: "" })
+              }}
               rows={2}
               maxLength={200}
               required
+              className={errors.description ? "border-destructive" : ""}
             />
+            {errors.description && <p className="text-xs text-destructive">{errors.description}</p>}
             <p className="text-xs text-muted-foreground">{description.length}/200</p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="category">Категория *</Label>
-            <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger>
+            <Select 
+              value={category} 
+              onValueChange={(value) => {
+                setCategory(value)
+                if (errors.category) setErrors({ ...errors, category: "" })
+              }} 
+              required
+            >
+              <SelectTrigger className={errors.category ? "border-destructive" : ""}>
                 <SelectValue placeholder="Выберите категорию" />
               </SelectTrigger>
               <SelectContent>
@@ -165,6 +220,7 @@ export function CampaignCreationForm() {
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && <p className="text-xs text-destructive">{errors.category}</p>}
           </div>
         </CardContent>
       </Card>
@@ -180,8 +236,15 @@ export function CampaignCreationForm() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fund">Фонд-партнёр *</Label>
-            <Select value={selectedFundId} onValueChange={setSelectedFundId} required>
-              <SelectTrigger>
+            <Select 
+              value={selectedFundId} 
+              onValueChange={(value) => {
+                setSelectedFundId(value)
+                if (errors.fundId) setErrors({ ...errors, fundId: "" })
+              }} 
+              required
+            >
+              <SelectTrigger className={errors.fundId ? "border-destructive" : ""}>
                 <SelectValue placeholder="Выберите фонд из списка партнёров" />
               </SelectTrigger>
               <SelectContent>
@@ -226,11 +289,16 @@ export function CampaignCreationForm() {
           <Textarea
             placeholder="Расскажите свою историю подробно. Почему эта кампания важна? Кому она поможет? Как будут использованы средства?"
             value={story}
-            onChange={(e) => setStory(e.target.value)}
+            onChange={(e) => {
+              setStory(e.target.value)
+              if (errors.story) setErrors({ ...errors, story: "" })
+            }}
             rows={8}
             maxLength={2000}
             required
+            className={errors.story ? "border-destructive" : ""}
           />
+          {errors.story && <p className="text-xs text-destructive mt-1">{errors.story}</p>}
           <p className="text-xs text-muted-foreground mt-2">{story.length}/2000</p>
         </CardContent>
       </Card>
@@ -250,11 +318,16 @@ export function CampaignCreationForm() {
                 type="number"
                 placeholder="10000"
                 value={goalAmount}
-                onChange={(e) => setGoalAmount(e.target.value)}
+                onChange={(e) => {
+                  setGoalAmount(e.target.value)
+                  if (errors.goalAmount) setErrors({ ...errors, goalAmount: "" })
+                }}
                 min="100"
                 step="0.01"
                 required
+                className={errors.goalAmount ? "border-destructive" : ""}
               />
+              {errors.goalAmount && <p className="text-xs text-destructive">{errors.goalAmount}</p>}
             </div>
             <div className="w-24 space-y-2">
               <Label>Валюта</Label>
