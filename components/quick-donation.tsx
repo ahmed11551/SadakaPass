@@ -35,21 +35,23 @@ export function QuickDonation({ amount, campaignId, fundId, category = "sadaqah"
       })
 
       if (result.error) {
-        alert(`Ошибка: ${result.error}`)
+        toast.error(`Ошибка: ${result.error}`)
         setIsProcessing(false)
         return
       }
 
+      toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
       setIsOpen(false)
       router.push("/profile")
     } catch (error) {
       console.error("Payment error:", error)
+      toast.error("Произошла ошибка при обработке платежа. Пожалуйста, попробуйте снова.")
       setIsProcessing(false)
     }
   }
 
   const handlePaymentFail = (reason: string) => {
-    alert(`Платёж не прошёл: ${reason}`)
+    toast.error(`Платёж не прошёл: ${reason}`)
     setIsProcessing(false)
   }
 

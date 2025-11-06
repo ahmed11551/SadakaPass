@@ -29,6 +29,7 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error("Failed to fetch active campaigns:", error)
+        toast.error("Не удалось загрузить активные кампании")
       } finally {
         setIsLoadingCampaigns(false)
       }

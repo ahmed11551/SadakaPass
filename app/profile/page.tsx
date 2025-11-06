@@ -38,6 +38,7 @@ export default function ProfilePage() {
         const result = await getUserDonations()
         if (result.error) {
           console.error("Error loading donations:", result.error)
+          toast.error("Не удалось загрузить историю пожертвований")
           // Use mock data as fallback
           setTransactions([
             {
@@ -99,6 +100,7 @@ export default function ProfilePage() {
         setTransactions(transformed)
       } catch (error) {
         console.error("Failed to load donations:", error)
+        toast.error("Ошибка при загрузке данных")
       } finally {
         setIsLoading(false)
       }

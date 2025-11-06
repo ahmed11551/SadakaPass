@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { CloudPaymentsButton } from "@/components/cloudpayments-button"
 import { createDonation } from "@/lib/actions/donations"
 import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 
 const PRESET_AMOUNTS = [100, 500, 1000, 2500, 5000, 10000]
 const CURRENCIES = ["RUB", "USD", "EUR"]
@@ -78,16 +79,16 @@ export function DonationForm() {
     })
 
     if (result.error) {
-      alert(`Ошибка: ${result.error}`)
+      toast.error(`Ошибка: ${result.error}`)
       return
     }
 
-    alert("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
+    toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
     router.push("/profile")
   }
 
   const handlePaymentFail = (reason: string) => {
-    alert(`Платёж не прошёл: ${reason}`)
+    toast.error(`Платёж не прошёл: ${reason}`)
   }
 
   return (

@@ -91,10 +91,12 @@ export function QuickDonationBlock() {
         return
       }
 
+      toast.success("Спасибо за ваше пожертвование! Да воздаст вам Аллах благом.")
       setIsDialogOpen(false)
       router.push("/profile")
     } catch (error) {
       console.error("Payment error:", error)
+      toast.error("Произошла ошибка при обработке платежа. Пожалуйста, попробуйте снова.")
       setIsProcessing(false)
     }
   }
