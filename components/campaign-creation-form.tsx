@@ -40,7 +40,9 @@ export function CampaignCreationForm() {
   const [category, setCategory] = useState("")
   const [deadline, setDeadline] = useState<Date>()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [selectedFundId, setSelectedFundId] = useState<string>("")
   const [funds, setFunds] = useState<any[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -120,9 +122,11 @@ export function CampaignCreationForm() {
           // Convert to base64 with quality 0.8
           const compressed = canvas.toDataURL("image/jpeg", 0.8)
           setImagePreview(compressed)
+          setImageFile(file)
         } else {
           // Fallback if canvas not available
           setImagePreview(reader.result as string)
+          setImageFile(file)
         }
       }
       img.onerror = () => {
@@ -200,6 +204,7 @@ export function CampaignCreationForm() {
       setCategory("")
       setDeadline(undefined)
       setImagePreview(null)
+      setImageFile(null)
       setSelectedFundId("")
       setErrors({})
 
